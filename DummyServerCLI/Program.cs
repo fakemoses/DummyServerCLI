@@ -1,4 +1,4 @@
-﻿using CommunicationDummyServer.MVVM.Model;
+﻿using DummyServerCLI.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,14 +16,37 @@ namespace DummyServerCLI
             List<string> commands = new List<string>();
             bool restartConnection = false;
 
-            //// Get Input from user
-            Console.WriteLine("To start the server, enter the following informations: ");
+            //// Make it support from exe args 
+
+            string ip = "127.0.0.1"; 
+            int port = 6000;
+            string comPort = "COM1";
+            int baudRate = 152000;
+
+            if (args.Count() <  2)
+            {
+                //// Get Input from user
+                Console.WriteLine("To start the server, enter the following informations: ");
+
+                Console.WriteLine("");
+
+                GetUserInput(out ip, out port);
+                GetUserInput(out comPort, out baudRate);
+            }
+            else if (args.Count() < 4)
+            {
+                //// 4 args - All infos
+            } else
+            {
+                //// Incomplete args - complain
+            }
 
             //// start connection on input
-            connManager.StartConnection(ConnectionType.Tcp, "127.0.0.1", "COM1", 152000, 6000, commands);
+            connManager.StartConnection(ConnectionType.Tcp, ip, comPort, baudRate, port, commands);
 
             Console.WriteLine("Connection created at 127.0.0.1:6000");
             Console.WriteLine("Press Ctrl+R to restart server. \r\nPress Ctrl+Q to quit.");
+
             while (true)
             {
                 var key = Console.ReadKey(true);
@@ -34,11 +57,18 @@ namespace DummyServerCLI
                 } else if(key.Modifiers == ConsoleModifiers.Control && key.Key == ConsoleKey.R)
                 {
                     connManager.StopConnection(ConnectionType.Tcp);
+                    break; //// Break connection for now
                 }
             }
+        }
 
-            //// stop connection on input
-            //// proper disposal required. In case the previous program blocks the ip and port
+        private static void GetUserInput(out string IP, out int port)
+        {
+            Console.WriteLine("Input IP/COM Number. For IP it is best to leave it depending on the computer");
+            IP = Console.ReadLine();
+
+            Console.WriteLine("Input Port/BaudRate Number");
+            port = int.Parse(Console.ReadLine());
         }
     }
 }

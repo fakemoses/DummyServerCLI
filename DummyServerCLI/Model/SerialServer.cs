@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Collections.Generic;
 
-namespace CommunicationDummyServer.MVVM.Model
+namespace DummyServerCLI.Model
 {
     public class SerialServer
     {
