@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DummyServerCLI
@@ -16,36 +18,45 @@ namespace DummyServerCLI
             List<string> commands = new List<string>();
             bool restartConnection = false;
 
-            //// Make it support from exe args 
-
             string ip = "127.0.0.1"; 
             int port = 6000;
             string comPort = "COM1";
             int baudRate = 152000;
+            ConnectionType connType = ConnectionType.Tcp;
 
-            if (args.Count() <  2)
+            //// Check args. If none then run on default
+            //// TODO: Search for -c -ip -p instead of putting it in order. Later integration of -f will be done to read the file
+            if (args.Length >= 1)
             {
-                //// Get Input from user
-                Console.WriteLine("To start the server, enter the following informations: ");
-
-                Console.WriteLine("");
-
-                GetUserInput(out ip, out port);
-                GetUserInput(out comPort, out baudRate);
+                if (args[0] == "tcp")
+                {
+                    connType = ConnectionType.Tcp;
+                }
+                else
+                {
+                    connType = ConnectionType.Serial;
+                }
+                
             }
-            else if (args.Count() < 4)
+            if (args.Length >= 2)
             {
-                //// 4 args - All infos
-            } else
-            {
-                //// Incomplete args - complain
+                ip = args[1];
             }
-
+            if (args.Length >= 3)
+            {
+                int.TryParse(args[2], out port);
+            }
+            else
+            {
+                Console.WriteLine("Running on TCP connection with default setting..");
+            }
+            
             //// start connection on input
             connManager.StartConnection(ConnectionType.Tcp, ip, comPort, baudRate, port, commands);
+            Thread.Sleep(1000);
 
-            Console.WriteLine("Connection created at 127.0.0.1:6000");
-            Console.WriteLine("Press Ctrl+R to restart server. \r\nPress Ctrl+Q to quit.");
+            Console.WriteLine($"Connection created at {ip}:{port}");
+            ////Console.WriteLine("Press Ctrl+R to restart server. \r\nPress Ctrl+Q to quit.");
 
             while (true)
             {
@@ -60,15 +71,6 @@ namespace DummyServerCLI
                     break; //// Break connection for now
                 }
             }
-        }
-
-        private static void GetUserInput(out string IP, out int port)
-        {
-            Console.WriteLine("Input IP/COM Number. For IP it is best to leave it depending on the computer");
-            IP = Console.ReadLine();
-
-            Console.WriteLine("Input Port/BaudRate Number");
-            port = int.Parse(Console.ReadLine());
         }
     }
 }
