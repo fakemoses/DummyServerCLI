@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helper\ArgumentHelper.cs" />
     <Compile Include="Model\ConnectionManager.cs" />
     <Compile Include="Model\Logger.cs" />
     <Compile Include="Model\SerialServer.cs" />

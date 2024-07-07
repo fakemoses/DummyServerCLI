@@ -1,6 +1,7 @@
 ﻿using DummyServerCLI.Model;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -18,17 +19,24 @@ namespace DummyServerCLI
             List<string> commands = new List<string>();
             bool restartConnection = false;
 
-            string ip = "127.0.0.1"; 
+            string ip = "127.0.0.1";
             int port = 6000;
             string comPort = "COM1";
             int baudRate = 152000;
             ConnectionType connType = ConnectionType.Tcp;
+            string filePath = string.Empty;
 
-            //// Check args. If none then run on default
-            //// TODO: Search for -c -ip -p instead of putting it in order. Later integration of -f will be done to read the file
-            if (args.Length >= 1)
+            //// Parse arguments
+            var argDict = ArgumentHelper.ParseArguments(args);
+
+            if (argDict.ContainsKey("-h"))
             {
-                if (args[0] == "tcp")
+                ArgumentHelper.ShowHelp();
+            }
+
+            if (argDict.ContainsKey("-c"))
+            {
+                if (argDict["-c"].ToLower() == "tcp")
                 {
                     connType = ConnectionType.Tcp;
                 }
@@ -36,41 +44,52 @@ namespace DummyServerCLI
                 {
                     connType = ConnectionType.Serial;
                 }
-                
             }
-            if (args.Length >= 2)
+
+            if (argDict.ContainsKey("-ip"))
             {
-                ip = args[1];
+                ip = argDict["-ip"];
             }
-            if (args.Length >= 3)
+
+            if (argDict.ContainsKey("-p") && int.TryParse(argDict["-p"], out int parsedPort))
             {
-                int.TryParse(args[2], out port);
+                port = parsedPort;
+            }
+
+            if (argDict.ContainsKey("-f"))
+            {
+                filePath = argDict["-f"];
+                if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                {
+                    commands = new List<string>(File.ReadAllLines(filePath));
+                }
             }
             else
             {
                 Console.WriteLine("Running on TCP connection with default setting..");
             }
-            
-            //// start connection on input
-            connManager.StartConnection(ConnectionType.Tcp, ip, comPort, baudRate, port, commands);
+
+            //// Start connection
+            connManager.StartConnection(connType, ip, comPort, baudRate, port, commands);
             Thread.Sleep(1000);
 
             Console.WriteLine($"Connection created at {ip}:{port}");
-            ////Console.WriteLine("Press Ctrl+R to restart server. \r\nPress Ctrl+Q to quit.");
 
             while (true)
             {
                 var key = Console.ReadKey(true);
                 if (key.Modifiers == ConsoleModifiers.Control && key.Key == ConsoleKey.Q)
                 {
-                    connManager.StopConnection(ConnectionType.Tcp);
+                    connManager.StopConnection(connType);
                     break;
-                } else if(key.Modifiers == ConsoleModifiers.Control && key.Key == ConsoleKey.R)
+                }
+                else if (key.Modifiers == ConsoleModifiers.Control && key.Key == ConsoleKey.R)
                 {
-                    connManager.StopConnection(ConnectionType.Tcp);
+                    connManager.StopConnection(connType);
                     break; //// Break connection for now
                 }
             }
         }
     }
+
 }
